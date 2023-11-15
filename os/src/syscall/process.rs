@@ -52,6 +52,18 @@ pub fn sys_get_time(ts: *mut TimeVal, _tz: usize) -> isize {
 
 /// YOUR JOB: Finish sys_task_info to pass testcases
 pub fn sys_task_info(_ti: *mut TaskInfo) -> isize {
+    //查询当前正在执行的任务信息，
+    //包括任务控制块相关信息（任务状态）、
+    //任务使用的系统调用及调用次数、
+    //系统调用时刻距离任务第一次被调度时刻的时长（单位ms）
     trace!("kernel: sys_task_info");
-    -1
+    let {status,syscall_times,time}=get_current_task_info();
+    unsafe {
+        *ti = TaskInfo {
+            status,
+            syscall_times,
+            time,
+        };
+    }
+    0
 }
