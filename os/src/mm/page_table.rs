@@ -1,6 +1,7 @@
 //! Implementation of [`PageTableEntry`] and [`PageTable`].
 
-use super::{frame_alloc, FrameTracker, PhysPageNum, StepByOne, VirtAddr, VirtPageNum};
+use super::{frame_alloc, FrameTracker, PhysPageNum, StepByOne, VirtAddr, VirtPageNum, PhysAddr};
+
 use alloc::vec;
 use alloc::vec::Vec;
 use bitflags::*;
@@ -170,4 +171,20 @@ pub fn translated_byte_buffer(token: usize, ptr: *const u8, len: usize) -> Vec<&
         start = end_va.into();
     }
     v
+}
+
+
+/// 恒等映射
+pub fn virtual_to_physical(token:usize,virtaddress:VirtAddr)->PhysAddr{
+    let pagetable=PageTable::from_token(token);
+    let vpn=virtaddress.floor();
+    let mut physaddress:PhysAddr=pagetable.translate(vpn).unwrap().ppn().into();
+    physaddress.0 += virtaddress.page_offset();
+    physaddress
+}
+/// 获取放在一个物理页帧开头的类型为T的数据的可变引用
+pub fn translated_mut_ptr<T>(token: usize, ptr: *mut T) -> &'static mut T{
+    let ptr_virtaddress = VirtAddr::from(ptr as usize);
+    let ptr_physaddress = virtual_to_physical(token, ptr_virtaddress);
+    ptr_physaddress.get_mut()
 }
