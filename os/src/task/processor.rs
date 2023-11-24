@@ -44,6 +44,13 @@ impl Processor {
     pub fn current(&self) -> Option<Arc<TaskControlBlock>> {
         self.current.as_ref().map(Arc::clone)
     }
+    ///增加系统调用次数
+    pub fn increase_syscall_time(&self, syscall_id: &usize) {
+        if let Some(current) = self.current() {
+            current.increase_syscall_time(syscall_id);
+        }
+    }
+
 }
 
 lazy_static! {
@@ -108,4 +115,14 @@ pub fn schedule(switched_task_cx_ptr: *mut TaskContext) {
     unsafe {
         __switch(switched_task_cx_ptr, idle_task_cx_ptr);
     }
+}
+/// increase
+pub fn increase_syscall_time(syscall_id: &usize) {
+    PROCESSOR.exclusive_access().increase_syscall_time(syscall_id);
+}
+
+/// 获取tcb
+pub fn get_current_task_info() -> Arc<TaskControlBlock> {
+    let current = current_task().unwrap();
+    return current;
 }
